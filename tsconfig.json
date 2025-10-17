@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "module": "NodeNext",
+    "outDir": "dist",
+    "target": "ESNext",
+    "strict": true,
+    "resolveJsonModule": true,
+    "lib": ["ES2019"],
+    "declaration": true,
+    "skipLibCheck": true
+    
+  },
+  "include": ["src/**/*"],
+  
+
+}

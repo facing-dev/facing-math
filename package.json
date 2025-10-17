@@ -1,0 +1,17 @@
+{
+  "name": "facing-math",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "watch": "./node_modules/.bin/tsc --watch"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@types/node": "^24.8.0",
+    "facing-metadata": "^2.0.3",
+    "typescript": "^5.9.3"
+  }
+}
