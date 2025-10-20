@@ -1,8 +1,18 @@
 import { throwError } from "../error.mjs";
 import {
     type ValueBatchLoose, type ValueSingle, type ValueArray, type Value,
-    length, isValueSingle, isValueArray, each, map, lengthLoose
+    length, isValueSingle, isValueArray, each, map, lengthLoose,
+    ValueBatch
 } from "../value/value.mjs";
+
+export function checkShape(batch: ValueBatch) {
+    if (batch.length === 0) {
+        throwError()
+    }
+
+    return batch.every(b => length(b) === length(batch[0]))
+
+}
 
 export function checkShapeLoose(batch: ValueBatchLoose) {
     if (batch.length === 0) {
@@ -55,7 +65,7 @@ export function columnLoose(columnIndex: number, batch: ValueBatchLoose): ValueA
     return result
 }
 
-export function calculateLoose<T extends Value>(cb: (array: ValueArray) => number, batch: [T, ...Value[]]): T {
+export function calculateLoose(cb: (array: ValueArray) => number, batch: ValueBatchLoose): ValueArray {
     if (length(batch) <= 1) {
         throwError()
     }
@@ -68,70 +78,70 @@ export function calculateLoose<T extends Value>(cb: (array: ValueArray) => numbe
             const v = cb(col)
             result[ind] = v
         })
-        return result as unknown as T
+        return result
     }
     if (isValueSingle(target)) {
-        return cb(columnLoose(0, batch)) as T
+        return [cb(columnLoose(0, batch))]
     }
     throwError()
 }
 
-export function add<T extends Value>(batch: [T, Value, ...Value[]]): T {
+export const add = function (...args: ValueBatchLoose): ValueArray {
     return calculateLoose((array) => {
         let sum = array[0]
         for (let i = 1; i < length(array); i++) {
             sum += array[i]
         }
         return sum
-    }, batch)
+    }, args)
 }
 
-export function subtract<T extends Value>(batch: [T, Value, ...Value[]]): T {
+export const subtract = function (...args: ValueBatchLoose): ValueArray {
     return calculateLoose((array) => {
         let sub = array[0]
         for (let i = 1; i < length(array); i++) {
             sub -= array[i]
         }
         return sub
-    }, batch)
+    }, args)
 }
 export const sub = subtract
 
-export function multiply<T extends Value>(batch: [T, Value, ...Value[]]): T {
+export const multiply = function (...args: ValueBatchLoose): ValueArray {
     return calculateLoose((array) => {
         let mul = array[0]
         for (let i = 1; i < length(array); i++) {
             mul *= array[i]
         }
         return mul
-    }, batch)
+    }, args)
 }
 export const mul = multiply
 
-export function divide<T extends Value>(batch: [T, Value, ...Value[]]): T {
+export const divide = function (...args: ValueBatchLoose): ValueArray {
     return calculateLoose((array) => {
         let div = array[0]
         for (let i = 1; i < length(array); i++) {
             div /= array[i]
         }
         return div
-    }, batch)
+    }, args)
 }
 export const div = divide
 
-export function power<T extends Value>(batch: [T, Value, ...Value[]]): T {
+export const power = function (...args: ValueBatchLoose): ValueArray {
     return calculateLoose((array) => {
         let pow = array[0]
         for (let i = 1; i < length(array); i++) {
             pow **= array[i]
         }
         return pow
-    }, batch)
+    }, args)
 }
 export const pow = power
 
-export function sum(batch: ValueBatchLoose): ValueArray {
-    return map(batch, (b) => {
+export const sum = function (...args: Value[]): ValueArray {
+    return map([...args], (b) => {
         if (isValueArray(b)) {
             return b.reduce((p, v) => p + v, 0)
         }
@@ -142,6 +152,6 @@ export function sum(batch: ValueBatchLoose): ValueArray {
     })
 }
 
-export function mean(batch: ValueBatchLoose): ValueArray {
-    return div([sum(batch), map(batch, lengthLoose)])
+export const mean = function (...args: Value[]): ValueArray {
+    return div(sum(...args), map(args, lengthLoose))
 }

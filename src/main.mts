@@ -22,3 +22,5 @@ export {
     mean,
     sum
 } from './math/base.mjs'
+
+export * from './math/statistics.mjs'

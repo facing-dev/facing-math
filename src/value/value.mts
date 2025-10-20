@@ -16,7 +16,7 @@ export function length(data: ReadonlyArray<any>) {
     return data.length
 }
 
-export function lengthLoose(data: ReadonlyArray<any> | number) {
+export function lengthLoose(data: ReadonlyArray<any> | ValueSingle) {
     if (Array.isArray(data)) {
         return length(data)
     }
