@@ -1,24 +1,27 @@
 import { throwError } from "../error.mjs";
-import { type Locator, length, iterator, value, isLocatorNumber, isLocatorNumberArray, LocatorNumberArray, getRaw, LocatorNumber } from "../value/value.mjs";
+import {
+    type ValueBatchLoose, type ValueSingle, type ValueArray, type Value,
+    length, isValueSingle, isValueArray, each, map, lengthLoose
+} from "../value/value.mjs";
 
-export function checkShape(...locators: Locator[]) {
-    if (locators.length === 0) {
+export function checkShapeLoose(batch: ValueBatchLoose) {
+    if (batch.length === 0) {
         throwError()
     }
-    const target = locators[0]
+    const target = batch[0]
     let l: number | null = null
-    if (isLocatorNumber(target)) {
+    if (isValueSingle(target)) {
         l = null
-    } else if (isLocatorNumberArray(target)) {
+    } else if (isValueArray(target)) {
         l = length(target)
     } else {
         throwError()
     }
-    locators.forEach((ite) => {
-        if (isLocatorNumber(ite)) {
+    batch.forEach((ite) => {
+        if (isValueSingle(ite)) {
             return
         }
-        if (isLocatorNumberArray(ite)) {
+        if (isValueArray(ite)) {
             const len = length(ite)
             if (l === null) {
                 if (len >= 1) {
@@ -35,112 +38,110 @@ export function checkShape(...locators: Locator[]) {
     })
 }
 
-export function column(columnIndex: number, ...args: Locator[]) {
-    const result: number[] = []
-    for (let i = 0; i < args.length; i++) {
-        const arg = args[i]
-        if (isLocatorNumber(arg)) {
-            result[i] = arg()
+export function columnLoose(columnIndex: number, batch: ValueBatchLoose): ValueArray {
+    const result: ValueSingle[] = []
+    for (let i = 0; i < batch.length; i++) {
+        const ite = batch[i]
+        if (isValueSingle(ite)) {
+            result[i] = ite
             continue
         }
-        if (isLocatorNumberArray(arg)) {
-            result[i] = arg(columnIndex)
+        if (isValueArray(ite)) {
+            result[i] = ite[columnIndex]
             continue
         }
         throwError()
-
     }
     return result
 }
 
-export function calculate<T extends Locator>(cb: (...args: number[]) => number, target: T, ...args: Locator[]): T {
-    checkShape(target, ...args)
-    if (isLocatorNumberArray(target)) {
-        const result: number[] = []
-        iterator(target, (val, ind) => {
-            const col = column(ind, target, ...args)
-            const v = cb(...col)
-            result[ind] = v
-        })
-        return value(result) as T
-    }
-    if (isLocatorNumber(target)) {
-        return value(cb(...[target, ...args].map(ite => ite(0)))) as T
-    }
-    throwError()
-
-}
-
-export function add<T extends Locator>(target: T, ...args: Locator[]): T {
-    return calculate((...args: number[]) => {
-        let sum = args[0]
-        for (let i = 1; i < args.length; i++) {
-            sum += args[i]
-        }
-        return sum
-    }, target, ...args)// as T
-}
-
-export function subtract<T extends Locator>(target: T, ...args: Locator[]): Locator {
-    return calculate((...args: number[]) => {
-        let sub = args[0]
-        for (let i = 1; i < args.length; i++) {
-            sub -= args[i]
-        }
-        return sub
-    }, target, ...args)
-}
-
-export const sub = subtract
-
-export function multiply<T extends Locator>(target: T, ...args: Locator[]): Locator {
-    return calculate((...args: number[]) => {
-        let mul = args[0]
-        for (let i = 1; i < args.length; i++) {
-            mul *= args[i]
-        }
-        return mul
-    }, target, ...args)
-}
-
-export const mul = multiply
-
-export function divide<T extends Locator>(target: T, ...args: Locator[]): Locator {
-    return calculate((...args: number[]) => {
-        let div = args[0]
-        for (let i = 1; i < args.length; i++) {
-            div /= args[i]
-        }
-        return div
-    }, target, ...args)
-}
-
-export const div = divide
-
-export function power<T extends Locator>(target: T, n: LocatorNumber): Locator {
-    return calculate((...args: number[]) => {
-        let pow = args[0]
-        for (let i = 1; i < args.length; i++) {
-            pow **= args[i]
-        }
-        return pow
-    }, target, n)
-}
-
-export const pow = power
-
-export function sum(target: LocatorNumberArray) {
-    let sum = 0
-    iterator(target, (v, i) => {
-        sum += v
-    })
-    return value(sum)
-}
-
-export function mean(target: LocatorNumberArray) {
-    const len = length(target)
-    if (len === 0) {
+export function calculateLoose<T extends Value>(cb: (array: ValueArray) => number, batch: [T, ...Value[]]): T {
+    if (length(batch) <= 1) {
         throwError()
     }
-    return div(sum(target),value(len))
+    checkShapeLoose(batch)
+    const target = batch[0]
+    if (isValueArray(target)) {
+        const result: ValueSingle[] = []
+        each(target, (val, ind) => {
+            const col = columnLoose(ind, batch)
+            const v = cb(col)
+            result[ind] = v
+        })
+        return result as unknown as T
+    }
+    if (isValueSingle(target)) {
+        return cb(columnLoose(0, batch)) as T
+    }
+    throwError()
+}
+
+export function add<T extends Value>(batch: [T, Value, ...Value[]]): T {
+    return calculateLoose((array) => {
+        let sum = array[0]
+        for (let i = 1; i < length(array); i++) {
+            sum += array[i]
+        }
+        return sum
+    }, batch)
+}
+
+export function subtract<T extends Value>(batch: [T, Value, ...Value[]]): T {
+    return calculateLoose((array) => {
+        let sub = array[0]
+        for (let i = 1; i < length(array); i++) {
+            sub -= array[i]
+        }
+        return sub
+    }, batch)
+}
+export const sub = subtract
+
+export function multiply<T extends Value>(batch: [T, Value, ...Value[]]): T {
+    return calculateLoose((array) => {
+        let mul = array[0]
+        for (let i = 1; i < length(array); i++) {
+            mul *= array[i]
+        }
+        return mul
+    }, batch)
+}
+export const mul = multiply
+
+export function divide<T extends Value>(batch: [T, Value, ...Value[]]): T {
+    return calculateLoose((array) => {
+        let div = array[0]
+        for (let i = 1; i < length(array); i++) {
+            div /= array[i]
+        }
+        return div
+    }, batch)
+}
+export const div = divide
+
+export function power<T extends Value>(batch: [T, Value, ...Value[]]): T {
+    return calculateLoose((array) => {
+        let pow = array[0]
+        for (let i = 1; i < length(array); i++) {
+            pow **= array[i]
+        }
+        return pow
+    }, batch)
+}
+export const pow = power
+
+export function sum(batch: ValueBatchLoose): ValueArray {
+    return map(batch, (b) => {
+        if (isValueArray(b)) {
+            return b.reduce((p, v) => p + v, 0)
+        }
+        if (isValueSingle(b)) {
+            return b
+        }
+        throwError()
+    })
+}
+
+export function mean(batch: ValueBatchLoose): ValueArray {
+    return div([sum(batch), map(batch, lengthLoose)])
 }

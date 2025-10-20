@@ -1,14 +1,16 @@
 export {
-    value,
-    getRaw,
-    iterator,
+    type Value,
+    type ValueArray,
+    type ValueSingle,
+    type ValueBatchLoose,
+    type ValueBatch,
+    isValueArray,
+    isValueSingle,
+    map,
+    each,
+    slice,
     length,
-    set,
-    isLocatorNumber,
-    isLocatorNumberArray,
-    type LocatorNumber,
-    type LocatorNumberArray,
-    type Locator
+    lengthLoose
 } from './value/value.mjs'
 
 export {
@@ -16,5 +18,7 @@ export {
     div, divide,
     add,
     sub, subtract,
-    pow, power
+    pow, power,
+    mean,
+    sum
 } from './math/base.mjs'
