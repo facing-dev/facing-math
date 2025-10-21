@@ -4,7 +4,7 @@ import { checkShape, pow, mean, sub, sum, mul } from "./base.mjs";
 export const covariance = function (x: ValueArray, y: ValueArray, ddof = 0) {
     checkShape([x, y])
     const MEAN = mean(x, y)
-    return sum(mul(...map([x, y], (d, i) => sub(d, MEAN[i]))))[0] / (length(x) - ddof)
+    return sum(mul(...map([x, y], (d, i) => sub(d, MEAN[i])))) / (length(x) - ddof)
 }
 export const cov = covariance
 
@@ -23,7 +23,7 @@ export const varip = variance_population
 export const variance_sample = (x: ValueArray) => vari(x, 1)
 export const varis = variance_sample
 
-export const standard_deviation = (x: ValueArray, ddof = 0) => pow(vari(x, ddof), .5)[0]
+export const standard_deviation = (x: ValueArray, ddof = 0) => pow(vari(x, ddof), .5)
 export const stdev = standard_deviation
 
 export const standard_deviation_population = (x: ValueArray) => standard_deviation(x, 0)

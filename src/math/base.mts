@@ -65,7 +65,7 @@ export function columnLoose(columnIndex: number, batch: ValueBatchLoose): ValueA
     return result
 }
 
-export function calculateLoose(cb: (array: ValueArray) => number, batch: ValueBatchLoose): ValueArray {
+export function calculateLoose<T extends ValueBatchLoose>(cb: (array: ValueArray) => number, batch: T): T[0] {
     if (length(batch) <= 1) {
         throwError()
     }
@@ -81,77 +81,90 @@ export function calculateLoose(cb: (array: ValueArray) => number, batch: ValueBa
         return result
     }
     if (isValueSingle(target)) {
-        return [cb(columnLoose(0, batch))]
+        return cb(columnLoose(0, batch))
     }
     throwError()
 }
 
-export const add = function (...args: ValueBatchLoose): ValueArray {
-    return calculateLoose((array) => {
-        let sum = array[0]
-        for (let i = 1; i < length(array); i++) {
-            sum += array[i]
-        }
-        return sum
-    }, args)
+export function operationColumn(p: (b: ValueArray) => number) {
+    return function <T extends ValueBatchLoose>(...args: T): T[0] extends ValueSingle ? ValueSingle : ValueArray {
+        return calculateLoose(p, args) as any
+    }
 }
 
-export const subtract = function (...args: ValueBatchLoose): ValueArray {
-    return calculateLoose((array) => {
-        let sub = array[0]
-        for (let i = 1; i < length(array); i++) {
-            sub -= array[i]
-        }
-        return sub
-    }, args)
-}
+export const add = operationColumn((array) => {
+    let sum = array[0]
+    for (let i = 1; i < length(array); i++) {
+        sum += array[i]
+    }
+    return sum
+})
+
+export const subtract = operationColumn((array) => {
+    let sub = array[0]
+    for (let i = 1; i < length(array); i++) {
+        sub -= array[i]
+    }
+    return sub
+})
 export const sub = subtract
 
-export const multiply = function (...args: ValueBatchLoose): ValueArray {
-    return calculateLoose((array) => {
-        let mul = array[0]
-        for (let i = 1; i < length(array); i++) {
-            mul *= array[i]
-        }
-        return mul
-    }, args)
-}
+export const multiply = operationColumn((array) => {
+    let mul = array[0]
+    for (let i = 1; i < length(array); i++) {
+        mul *= array[i]
+    }
+    return mul
+})
 export const mul = multiply
 
-export const divide = function (...args: ValueBatchLoose): ValueArray {
-    return calculateLoose((array) => {
-        let div = array[0]
-        for (let i = 1; i < length(array); i++) {
-            div /= array[i]
-        }
-        return div
-    }, args)
-}
+export const divide = operationColumn((array) => {
+    let div = array[0]
+    for (let i = 1; i < length(array); i++) {
+        div /= array[i]
+    }
+    return div
+})
 export const div = divide
 
-export const power = function (...args: ValueBatchLoose): ValueArray {
-    return calculateLoose((array) => {
-        let pow = array[0]
-        for (let i = 1; i < length(array); i++) {
-            pow **= array[i]
-        }
-        return pow
-    }, args)
-}
+export const power = operationColumn((array) => {
+    let pow = array[0]
+    for (let i = 1; i < length(array); i++) {
+        pow **= array[i]
+    }
+    return pow
+})
 export const pow = power
 
-export const sum = function (...args: Value[]): ValueArray {
-    return map([...args], (b) => {
-        if (isValueArray(b)) {
-            return b.reduce((p, v) => p + v, 0)
+export function operationRow(p: (b: Value) => number) {
+    return function <T extends ValueBatchLoose>(...args: T): T extends [ValueArray] ? number : T extends [ValueSingle] ? number : ValueArray {
+        if (args.length === 1) {
+            return p(args[0]) as any
         }
-        if (isValueSingle(b)) {
-            return b
-        }
-        throwError()
-    })
+        return map([...args], (b) => {
+            return p(b)
+        }) as any
+    }
 }
 
-export const mean = function (...args: Value[]): ValueArray {
-    return div(sum(...args), map(args, lengthLoose))
-}
+export const sum = operationRow((b: Value) => {
+    if (isValueArray(b)) {
+        return b.reduce((p, v) => p + v, 0)
+    }
+    if (isValueSingle(b)) {
+        return b
+    }
+    throwError()
+})
+
+export const mean = operationRow((b: Value) => {
+    if (isValueArray(b)) {
+        return sum(b) / b.length
+    }
+    if (isValueSingle(b)) {
+        return b
+    }
+    throwError()
+})
+
+mean(1, 2, 3)
