@@ -1,170 +1,69 @@
-import { throwError } from "../error.mjs";
 import {
-    type ValueBatchLoose, type ValueSingle, type ValueArray, type Value,
-    length, isValueSingle, isValueArray, each, map, lengthLoose,
-    ValueBatch
+    type Value, type ValueArray,
+    length
 } from "../value/value.mjs";
 
-export function checkShape(batch: ValueBatch) {
-    if (batch.length === 0) {
-        throwError()
-    }
-
-    return batch.every(b => length(b) === length(batch[0]))
-
+function _add(a: Value, b: Value): Value {
+    return a + b
 }
 
-export function checkShapeLoose(batch: ValueBatchLoose) {
-    if (batch.length === 0) {
-        throwError()
-    }
-    const target = batch[0]
-    let l: number | null = null
-    if (isValueSingle(target)) {
-        l = null
-    } else if (isValueArray(target)) {
-        l = length(target)
-    } else {
-        throwError()
-    }
-    batch.forEach((ite) => {
-        if (isValueSingle(ite)) {
-            return
-        }
-        if (isValueArray(ite)) {
-            const len = length(ite)
-            if (l === null) {
-                if (len >= 1) {
-                    return
-                }
-                throwError()
-            }
-            if (len !== l) {
-                throwError()
-            }
-            return
-        }
-        throwError()
-    })
+export function add(val: ValueArray): Value {
+    return _add(val[0], val[1])
 }
 
-export function columnLoose(columnIndex: number, batch: ValueBatchLoose): ValueArray {
-    const result: ValueSingle[] = []
-    for (let i = 0; i < batch.length; i++) {
-        const ite = batch[i]
-        if (isValueSingle(ite)) {
-            result[i] = ite
-            continue
-        }
-        if (isValueArray(ite)) {
-            result[i] = ite[columnIndex]
-            continue
-        }
-        throwError()
-    }
-    return result
+
+export function subtract(val: ValueArray): Value {
+    return val[0] - val[1]
 }
-
-export function calculateLoose<T extends ValueBatchLoose>(cb: (array: ValueArray) => number, batch: T): T[0] {
-    if (length(batch) <= 1) {
-        throwError()
-    }
-    checkShapeLoose(batch)
-    const target = batch[0]
-    if (isValueArray(target)) {
-        const result: ValueSingle[] = []
-        each(target, (val, ind) => {
-            const col = columnLoose(ind, batch)
-            const v = cb(col)
-            result[ind] = v
-        })
-        return result
-    }
-    if (isValueSingle(target)) {
-        return cb(columnLoose(0, batch))
-    }
-    throwError()
-}
-
-export function operationColumn(p: (b: ValueArray) => number) {
-    return function <T extends ValueBatchLoose>(...args: T): T[0] extends ValueSingle ? ValueSingle : ValueArray {
-        return calculateLoose(p, args) as any
-    }
-}
-
-export const add = operationColumn((array) => {
-    let sum = array[0]
-    for (let i = 1; i < length(array); i++) {
-        sum += array[i]
-    }
-    return sum
-})
-
-export const subtract = operationColumn((array) => {
-    let sub = array[0]
-    for (let i = 1; i < length(array); i++) {
-        sub -= array[i]
-    }
-    return sub
-})
 export const sub = subtract
 
-export const multiply = operationColumn((array) => {
-    let mul = array[0]
-    for (let i = 1; i < length(array); i++) {
-        mul *= array[i]
-    }
-    return mul
-})
+export function multiply(val: ValueArray): Value {
+    return val[0] * val[1]
+}
 export const mul = multiply
 
-export const divide = operationColumn((array) => {
-    let div = array[0]
-    for (let i = 1; i < length(array); i++) {
-        div /= array[i]
-    }
-    return div
-})
+export function divide(val: ValueArray): Value {
+    return val[0] / val[1]
+}
 export const div = divide
 
-export const power = operationColumn((array) => {
-    let pow = array[0]
-    for (let i = 1; i < length(array); i++) {
-        pow **= array[i]
-    }
-    return pow
-})
+export function power(val: ValueArray): Value {
+    return val[0] ** val[1]
+}
 export const pow = power
 
-export function operationRow(p: (b: Value) => number) {
-    return function <T extends ValueBatchLoose>(...args: T): T extends [ValueArray] ? number : T extends [ValueSingle] ? number : ValueArray {
-        if (args.length === 1) {
-            return p(args[0]) as any
+export function max(val: ValueArray): Value {
+    let max = Number.NEGATIVE_INFINITY
+    for (let i = 1; i < length(val); i++) {
+        if (val[i] > max) {
+            max = val[i]
         }
-        return map([...args], (b) => {
-            return p(b)
-        }) as any
     }
+    return max
 }
 
-export const sum = operationRow((b: Value) => {
-    if (isValueArray(b)) {
-        return b.reduce((p, v) => p + v, 0)
+export function min(val: ValueArray): Value {
+    let min = Number.POSITIVE_INFINITY
+    for (let i = 1; i < length(val); i++) {
+        if (val[i] < min) {
+            min = val[i]
+        }
     }
-    if (isValueSingle(b)) {
-        return b
-    }
-    throwError()
-})
+    return min
+}
 
-export const mean = operationRow((b: Value) => {
-    if (isValueArray(b)) {
-        return sum(b) / b.length
+export function sum(val: ValueArray): Value {
+    let res = 0
+    for (let i = 0; i < length(val); i++) {
+        res += val[i]
     }
-    if (isValueSingle(b)) {
-        return b
-    }
-    throwError()
-})
+    return res
+}
 
-mean(1, 2, 3)
+export function average(val: ValueArray): Value {
+    return sum(val) / length(val)
+}
+
+export function map(val: ValueArray, func: (p: Value) => Value): ValueArray {
+    return val.map(func)
+}

@@ -1,46 +1,18 @@
-export type ValueSingle = number
-export type ValueArray = ReadonlyArray<ValueSingle>
-export type Value = ValueSingle | ValueArray
-export type ValueBatchLoose = ReadonlyArray<Value>
-export type ValueBatch = ReadonlyArray<ValueArray>
+export type Value = Readonly<number>
+export type ValueArray = ReadonlyArray<Value>
 
-export function isValueSingle(d: Value): d is ValueSingle {
-    return typeof d === 'number'
-}
-
-export function isValueArray(d: Value): d is ValueArray {
-    return Array.isArray(d)
-}
-
-export function length(data: ReadonlyArray<any>) {
-    return data.length
-}
-
-export function lengthLoose(data: ReadonlyArray<any> | ValueSingle) {
-    if (Array.isArray(data)) {
-        return length(data)
+export function batch<T extends (p: any) => any>(func: T, val: ReadonlyArray<Parameters<T>[0]>): ReadonlyArray<ReturnType<T>> {
+    const res: ReturnType<T>[] = []
+    for (let i = 0; i < val[0].length; i++) {
+        res[i] = func(val.map(ite=>ite[i]))
     }
-    return 1
+    return res
 }
 
-export function each<D>(data: ReadonlyArray<D>, cb: (value: D, index: number) => void | boolean): void {
-    const len = length(data)
-    for (let i = 0; i < len; i++) {
-        const r = cb(data[i], i)
-        if (r === false) {
-            return
-        }
-    }
+export function length(val: ReadonlyArray<any>) {
+    return val.length
 }
 
-export function map<D, T>(data: ReadonlyArray<D>, cb: (value: D, index: number) => T): T[] {
-    const arr: T[] = []
-    each(data, (val, ind) => {
-        arr[ind] = cb(val, ind)
-    })
-    return arr
-}
-
-export function slice<D>(data: ReadonlyArray<D>, start: number, end: number): D[] {
-    return data.slice(start, end)
+export function fill<T>(value: T, length: number): T[] {
+    return Array(length).fill(value)
 }
