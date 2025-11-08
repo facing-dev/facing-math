@@ -1,7 +1,10 @@
 export {
     type Value,
     type ValueArray,
-    batch
+    type LooseValue,
+    batch,
+    looseValue,
+    fill
 } from './value/value.mjs'
 
 export * from './math/base.mjs'
