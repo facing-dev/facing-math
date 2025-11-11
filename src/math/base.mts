@@ -2,7 +2,8 @@ import {
     type Value, type ValueArray,
     batch,
     iterator,
-    length
+    length,
+    map
 } from "../value/value.mjs";
 
 function _add(a: Value, b: Value): Value {
@@ -146,6 +147,21 @@ export function wilder_moving_average(val: [ValueArray], windowSize: number): Va
 
 export const wma = wilder_moving_average
 
+export function wilder_moving_average_weight(val: [ValueArray,ValueArray], windowSize: number): ValueArray {
+    const [list,nor] = val
+    let wma: Value[] = []
+    for (let i = 0; i < list.length; i++) {
+        const v = list[i]
+        if (i === 0) {
+            wma[0] = v
+        } else {
+            const size = Math.min(i + 1, windowSize)
+            wma[i] = v/*DO NOT divide by ind */ + wma[i - 1] - (wma[i - 1] / size)*nor[i]
+        }
+    }
+    return wma
+}
+
 export function moving_max(val: [ValueArray], windowSize: number): ValueArray {
     const list = val[0]
     const t: number[] = []
@@ -184,3 +200,18 @@ export function moving_min(val: [ValueArray], windowSize: number): ValueArray {
 }
 
 export const mmin = moving_min
+
+export function moving_normalize(val: [ValueArray], windowSize: number) {
+    const list = val[0]
+    const max = mmax(val, windowSize)
+    const min = mmin(val, windowSize)
+    const ret = map(batch(
+        divide,
+        [
+            batch(subtract, [list, min]),
+            batch(subtract, [max, min])
+        ]
+    ), (p) => Number.isNaN(p) ? .5 : p)
+    return ret
+}
+

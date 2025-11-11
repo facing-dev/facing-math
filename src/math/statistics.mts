@@ -35,3 +35,33 @@ export const stdevp = standard_deviation_population
 
 export const standard_deviation_sample = (x: [ValueArray]) => standard_deviation(x, 1)
 export const stdevs = standard_deviation_sample
+
+export function z_score(val: [ValueArray], windowSize: number) {
+    const list = val[0]
+    const len = length(list)
+    let sum = 0
+    let count = 0
+    let M2 = 0
+    const ret:number[]=[]
+    // let mean = 0
+    for (let i = 0; i < len; i++) {
+        const v = list[i]
+        let old_mean = count === 0 ? 0 : (sum / count)
+        if (count === windowSize) {
+            const old_v = list[i - windowSize]
+            M2 -= (old_v - old_mean) ** 2
+            count--
+            sum -= old_v
+        }
+
+        sum += v
+        count++
+        const mean = sum / count
+        M2 += (v - old_mean) * (v - mean)
+        const stdev = Math.sqrt(M2 / count)
+        ret[i]=(v-mean)/stdev
+    }
+    return ret
+
+
+}

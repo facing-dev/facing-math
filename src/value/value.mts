@@ -3,9 +3,13 @@ import { throwError } from "../error.mjs"
 export type Value = Readonly<number>
 export type ValueArray = ReadonlyArray<Value>
 export type LooseValue<T = any> = () => T
-export function batch<V, R extends any, A extends any[]>(func: (v: V, ...a: A) => R, val: { [I in keyof V]: I extends number | `${number}` ? ReadonlyArray<V[I]> | LooseValue<V[I]> : any } & ReadonlyArray<any>, ...a: A): ReadonlyArray<R> {
+export function batch<V, R extends any, A extends any[]>(func: (v: V, ...a: A) => R, val: { [I in keyof V]: I extends number | `${number}` ? ReadonlyArray<V[I]> | LooseValue<V[I]> : never } & ReadonlyArray<ReadonlyArray<any> | LooseValue<any>>, ...a: A): ReadonlyArray<R> {
     const res: R[] = []
-    for (let i = 0; i < val[0].length; i++) {
+    const arr = val.find(ite => Array.isArray(ite))
+    if (!arr) {
+        throwError('batch all looseValue')
+    }
+    for (let i = 0; i < arr.length; i++) {
         res[i] = func(val.map(ite => {
             if (Array.isArray(ite)) {
                 return ite[i]
@@ -35,10 +39,10 @@ export function map(val: ValueArray, func: (p: Value, i: number) => Value): Valu
     return val.map(func)
 }
 export function iterator(val: number, cb: {
-    (index: number): boolean |  void
+    (index: number): boolean | void
 }): void
 export function iterator<T>(val: ReadonlyArray<T>, cb: {
-    (val: T, index: number): boolean |  void
+    (val: T, index: number): boolean | void
 }): void
 export function iterator<T>(val: ReadonlyArray<T> | number, cb: Function) {
     const len = Array.isArray(val) ? length(val) : val as number
