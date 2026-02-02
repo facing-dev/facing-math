@@ -1,4 +1,5 @@
 export { dmi, dmi_dynamic_weight } from './dmi.mjs'
+export { dmi as dmi2 } from './dmi2.mjs'
 export { macd } from './macd.mjs'
 export { atr } from './atr.mjs'
 export { boll } from './boll.mjs'

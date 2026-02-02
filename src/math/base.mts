@@ -38,7 +38,7 @@ export const pow = power
 export function max(val: [ValueArray]): Value {
     const list = val[0]
     let max = Number.NEGATIVE_INFINITY
-    for (let i = 1; i < length(list); i++) {
+    for (let i = 0; i < length(list); i++) {
         if (list[i] > max) {
             max = list[i]
         }
@@ -49,7 +49,7 @@ export function max(val: [ValueArray]): Value {
 export function min(val: [ValueArray]): Value {
     const list = val[0]
     let min = Number.POSITIVE_INFINITY
-    for (let i = 1; i < length(list); i++) {
+    for (let i = 0; i < length(list); i++) {
         if (list[i] < min) {
             min = list[i]
         }
@@ -147,8 +147,26 @@ export function wilder_moving_average(val: [ValueArray], windowSize: number): Va
 
 export const wma = wilder_moving_average
 
-export function wilder_moving_average_weight(val: [ValueArray,ValueArray], windowSize: number): ValueArray {
-    const [list,nor] = val
+// export function wilder_moving_average_2(val: [ValueArray, ValueArray], windowSize: number): ValueArray {
+//     const [list_, weightList] = val
+//     const list = batch(mul,[list_,weightList])
+//     let wma: Value[] = []
+//     for (let i = 0; i < list.length; i++) {
+//         const v = list[i]
+//         if (i === 0) {
+//             wma[0] = v
+//         } else {
+//             const size = Math.min(i + 1, windowSize)
+//             wma[i] = v/*DO NOT divide by ind */ + wma[i - 1] - wma[i - 1] / size
+//         }
+//     }
+//     return wma
+// }
+
+// export const wma_2 = wilder_moving_average_2
+
+export function wilder_moving_average_weight(val: [ValueArray, ValueArray], windowSize: number): ValueArray {
+    const [list, nor] = val
     let wma: Value[] = []
     for (let i = 0; i < list.length; i++) {
         const v = list[i]
@@ -156,7 +174,7 @@ export function wilder_moving_average_weight(val: [ValueArray,ValueArray], windo
             wma[0] = v
         } else {
             const size = Math.min(i + 1, windowSize)
-            wma[i] = v/*DO NOT divide by ind */ + wma[i - 1] - (wma[i - 1] / size)*nor[i]
+            wma[i] = v/*DO NOT divide by ind */ + wma[i - 1] - (wma[i - 1] / size) * nor[i]
         }
     }
     return wma
