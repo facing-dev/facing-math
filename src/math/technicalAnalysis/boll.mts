@@ -1,4 +1,6 @@
-import { batch, iterator, looseValue, sma, stdevs, sub, ValueArray } from "../../main.mjs";
+import { batch, iterator, looseValue, ValueArray } from "../../value/value.mjs";
+import { sub, sma } from '../base.mjs'
+import { stdevs } from "../statistics.mjs";
 
 export function boll(val: [ValueArray], n: number, k: number) {
     const list = val[0]

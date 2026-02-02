@@ -1,6 +1,6 @@
 import { throwError } from "../../error.mjs"
-import { batch, iterator, length, looseValue, map, Value, ValueArray } from "../../main.mjs"
-import { sma, ema, wma, moving_normalize, wilder_moving_average_weight, add, mul, wilder_moving_average } from '../base.mjs'
+import { batch, iterator, length, looseValue, ValueArray } from "../../value/value.mjs"
+import { sma, ema, wma, moving_normalize, add, mul, wilder_moving_average } from '../base.mjs'
 import { atr } from "./atr.mjs"
 
 export function dmi(val: [ValueArray, ValueArray, ValueArray], n: number, w: number, adxMethod: 'ORIGINAL' | 'SMA') {

@@ -1,5 +1,6 @@
-import { batch, divide, fill, iterator, length, looseValue, sub, ValueArray } from "../../main.mjs";
-import { ema } from "../../main.mjs";
+import { batch, iterator, length, looseValue, ValueArray } from "../../value/value.mjs";
+import { divide, sub, ema } from '../base.mjs'
+
 export function macd(val: [ValueArray], short: number, long: number, dea: number) {
     const list = val[0]
     const ret: {

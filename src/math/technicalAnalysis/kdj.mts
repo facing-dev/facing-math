@@ -1,5 +1,5 @@
-import { batch, ema, iterator, length, looseValue, max, min, mmax, mmin, mul, sub, ValueArray } from "../../main.mjs";
-
+import { batch, iterator, length, looseValue, ValueArray } from "../../value/value.mjs";
+import { ema, mmax, mmin, mul, sub, } from '../base.mjs'
 export function kdj(val: [ValueArray, ValueArray, ValueArray], n: number, m1: number, m2: number) {
     const [close, high, low] = val
     const ret: {
@@ -19,15 +19,15 @@ export function kdj(val: [ValueArray, ValueArray, ValueArray], n: number, m1: nu
     })
     const K = ema([rsv], 1 / m1)
     const D = ema([K], 1 / m2)
-    const J = batch(sub,[
-        batch(mul,[K,looseValue(3)]),
-        batch(mul,[D,looseValue(2)])
+    const J = batch(sub, [
+        batch(mul, [K, looseValue(3)]),
+        batch(mul, [D, looseValue(2)])
     ])
-    iterator(length(close),(i)=>{
-        ret[i]={
-            K:K[i],
-            D:D[i],
-            J:J[i]
+    iterator(length(close), (i) => {
+        ret[i] = {
+            K: K[i],
+            D: D[i],
+            J: J[i]
         }
     })
     return ret

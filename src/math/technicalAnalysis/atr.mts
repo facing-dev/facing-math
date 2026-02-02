@@ -1,5 +1,5 @@
-import { iterator, length, ValueArray } from "../../main.mjs";
-import { sma } from "../../main.mjs";
+import { iterator, length, ValueArray } from "../../value/value.mjs";
+import { sma } from "../base.mjs";
 export function atr(val: [ValueArray, ValueArray, ValueArray], n: number) {
     const [close, high, low] = val
     const getD = (i: number): number => {

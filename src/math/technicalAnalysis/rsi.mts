@@ -1,5 +1,5 @@
-import { ema, iterator, length, ValueArray } from "../../main.mjs";
-
+import { iterator, length, ValueArray } from "../../value/value.mjs";
+import { ema } from '../base.mjs'
 export function rsi(val: [ValueArray], n: number): ValueArray {
     const list = val[0]
     const ret: number[] = []
