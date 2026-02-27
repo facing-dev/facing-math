@@ -3,7 +3,7 @@ import { batch, iterator, length, looseValue, ValueArray } from "../../value/val
 import { sma, ema, wma, moving_normalize, add, mul, wilder_moving_average } from '../base.mjs'
 import { atr } from "./atr.mjs"
 
-export function dmi(val: [ValueArray, ValueArray, ValueArray], n: number, w: number, adxMethod: 'ORIGINAL' | 'SMA') {
+export function dmi(val: [ValueArray, ValueArray, ValueArray], n: number, w: number, adxMethod: 'ORIGINAL' | 'SMA', weights?: ReadonlyArray<number>) {
     const [close, high, low] = val
     const ret: {
         plusDI: number,
@@ -27,8 +27,8 @@ export function dmi(val: [ValueArray, ValueArray, ValueArray], n: number, w: num
         TR[i] = Math.max(Math.abs(high[i] - low[i]), Math.abs(high[i] - close[i - 1]), Math.abs(low[i] - close[i - 1]))
         const uD = high[i] - high[i - 1]
         const lD = -(low[i] - low[i - 1])
-        uDM[i] = (uD > 0 && uD > lD) ? uD : 0
-        lDM[i] = (lD > 0 && lD > uD) ? lD : 0
+        uDM[i] = ((uD > 0 && uD > lD) ? uD : 0) * (weights?.[i] ?? 1)
+        lDM[i] = ((lD > 0 && lD > uD) ? lD : 0) * (weights?.[i] ?? 1)
     })
     const wmaTR = wma([TR], n),
         wmaUDM = wma([uDM], n),

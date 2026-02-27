@@ -233,3 +233,7 @@ export function moving_normalize(val: [ValueArray], windowSize: number) {
     return ret
 }
 
+export function absolute(val: [ValueArray]): ValueArray {
+    return val[0].map(ite => Math.abs(ite))
+}
+export const abs = absolute
